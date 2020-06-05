@@ -1,4 +1,4 @@
-﻿/*
+/*
 MIT LICENSE
 
 Copyright 2017 Digital Ruby, LLC - http://www.digitalruby.com
@@ -62,35 +62,50 @@ namespace ExchangeSharp
         }
     }
 
-    /// <summary>
-    /// Represents all the asks (sells) and bids (buys) for an exchange asset
-    /// </summary>
-    public sealed class ExchangeOrderBook
-    {
-        /// <summary>
-        /// The sequence id. This increments as updates come through. Not all exchanges will populate this.
-        /// This property is not serialized using the ToBinary and FromBinary methods.
-        /// </summary>
-        public long SequenceId { get; set; }
+	/// <summary>
+	/// Represents all the asks (sells) and bids (buys) for an exchange asset
+	/// </summary>
+	public sealed class ExchangeOrderBook
+	{
+		/// <summary>
+		/// The sequence id. This increments as updates come through. Not all exchanges will populate this.
+		/// This property is not serialized using the ToBinary and FromBinary methods.
+		/// </summary>
+		public long SequenceId { get; set; }
 
-        /// <summary>
-        /// The market symbol.
-        /// This property is not serialized using the ToBinary and FromBinary methods.
-        /// </summary>
-        public string MarketSymbol { get; set; }
+		/// <summary>
+		/// The market symbol.
+		/// This property is not serialized using the ToBinary and FromBinary methods.
+		/// </summary>
+		public string MarketSymbol { get; set; }
 
-        /// <summary>The last updated UTC</summary>
-        public DateTime LastUpdatedUtc { get; set; } = DateTime.MinValue;
+		/// <summary>The last updated UTC</summary>
+		public DateTime LastUpdatedUtc { get; set; } = DateTime.MinValue;
 
-        /// <summary>
-        /// List of asks (sells)
-        /// </summary>
-        public SortedDictionary<decimal, ExchangeOrderPrice> Asks { get; } = new SortedDictionary<decimal, ExchangeOrderPrice>();
+		/// <summary>
+		/// List of asks (sells)
+		/// </summary>
+		public SortedDictionary<decimal, ExchangeOrderPrice> Asks { get; } = new SortedDictionary<decimal, ExchangeOrderPrice>();
 
-        /// <summary>
-        /// List of bids (buys)
-        /// </summary>
-        public SortedDictionary<decimal, ExchangeOrderPrice> Bids { get; } = new SortedDictionary<decimal, ExchangeOrderPrice>(new DescendingComparer<decimal>());
+		/// <summary>
+		/// List of bids (buys)
+		/// </summary>
+		public SortedDictionary<decimal, ExchangeOrderPrice> Bids { get; } = new SortedDictionary<decimal, ExchangeOrderPrice>(new DescendingComparer<decimal>());
+
+		/// <summary>
+		/// Whether the order book is a full snapshot. If true, user should discard any computed/cached one.
+		/// </summary>
+		internal bool IsFull { get; set; }
+
+		/// <summary>
+		/// The max levels of the orderbook, that the cache to calculate the full orderbook should stay in.
+		/// Some exchanges assume that depths exceed this size should be discarded and they would not notify you when those depths go out of range.
+		/// APIs not handling this properly would lead to memory leak because the cache would contain more and more non-existing depths.
+		/// On the other side, if maxCount is less than actually subscribed levels, some levels would be missing as they go out of range and then
+		/// come back in range again.
+		/// So, the correct way is to specify an exact value of levels you tell the exchange to subscribe. No more, no less.
+		/// </summary>
+		internal int MaxCount { get; set; }
 
         /// <summary>
         /// ToString

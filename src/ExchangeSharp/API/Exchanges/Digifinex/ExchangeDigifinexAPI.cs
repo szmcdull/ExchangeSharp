@@ -486,31 +486,31 @@ namespace ExchangeSharp
                         var trade = x[i];
                         var isBuy = trade["type"].ToStringLowerInvariant() != "sell";
                         var flags = default(ExchangeTradeFlags);
-                        if (isBuy)
+						if (isBuy)
+						{
+							flags |= ExchangeTradeFlags.IsBuy;
+						}
+                        if (clean)
                         {
-                            flags |= ExchangeTradeFlags.IsBuy;
-                            if (clean)
+                            flags |= ExchangeTradeFlags.IsFromSnapshot;
+                            if (i == x.Count - 1)
                             {
-                                flags |= ExchangeTradeFlags.IsFromSnapshot;
-                                if (i == x.Count - 1)
-                                {
-                                    flags |= ExchangeTradeFlags.IsLastFromSnapshot;
-                                }
+                                flags |= ExchangeTradeFlags.IsLastFromSnapshot;
                             }
-                            await callback.Invoke(new KeyValuePair<string, ExchangeTrade>
-                            (
-                                symbol,
-                                new ExchangeTrade
-                                {
-                                    Id = trade["id"].ToStringInvariant(),
-                                    Timestamp = CryptoUtility.UnixTimeStampToDateTimeSeconds(0).AddSeconds(trade["time"].ConvertInvariant<double>()),
-                                    Price = trade["price"].ConvertInvariant<decimal>(),
-                                    Amount = trade["amount"].ConvertInvariant<decimal>(),
-                                    IsBuy = isBuy,
-                                    Flags = flags,
-                                }
-                            ));
                         }
+                        await callback.Invoke(new KeyValuePair<string, ExchangeTrade>
+                        (
+                            symbol,
+                            new ExchangeTrade
+                            {
+                                Id = trade["id"].ToStringInvariant(),
+                                Timestamp = CryptoUtility.UnixTimeStampToDateTimeSeconds(0).AddSeconds(trade["time"].ConvertInvariant<double>()),
+                                Price = trade["price"].ConvertInvariant<decimal>(),
+                                Amount = trade["amount"].ConvertInvariant<decimal>(),
+                                IsBuy = isBuy,
+                                Flags = flags,
+                            }
+                        ));
                     }
                 }
             },

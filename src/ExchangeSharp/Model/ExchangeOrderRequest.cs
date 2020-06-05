@@ -1,4 +1,4 @@
-﻿/*
+/*
 MIT LICENSE
 
 Copyright 2017 Digital Ruby, LLC - http://www.digitalruby.com
@@ -45,6 +45,12 @@ namespace ExchangeSharp
         /// True if this is a buy, false if a sell
         /// </summary>
         public bool IsBuy { get; set; }
+
+		/// <summary>
+		/// True if the order is to close (futures) position. False if to open position.
+		/// If it is not supported, only IsBuy will be used.
+		/// </summary>
+		public bool IsClose { get; set; }
 
         /// <summary>
         /// Whether the order is a margin order. Not all exchanges support margin orders, so this parameter may be ignored.

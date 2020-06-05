@@ -21,6 +21,7 @@ using ExchangeSharp.Coinbase;
 using ExchangeSharp.KuCoin;
 using Newtonsoft.Json.Linq;
 using ExchangeSharp.NDAX;
+using System.Linq;
 
 namespace ExchangeSharp
 {
@@ -51,7 +52,7 @@ namespace ExchangeSharp
             ConcurrentDictionary<string, ExchangeOrderBook> fullBooks = new ConcurrentDictionary<string, ExchangeOrderBook>();
             Dictionary<string, Queue<ExchangeOrderBook>> partialOrderBookQueues = new Dictionary<string, Queue<ExchangeOrderBook>>();
 
-            static void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues, SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit)
+            static void applyDelta(SortedDictionary<decimal, ExchangeOrderPrice> deltaValues, SortedDictionary<decimal, ExchangeOrderPrice> bookToEdit, int maxCount)
             {
                 foreach (ExchangeOrderPrice record in deltaValues.Values)
                 {
@@ -64,7 +65,19 @@ namespace ExchangeSharp
                         bookToEdit[record.Price] = record;
                     }
                 }
-            }
+
+				if (maxCount > 0)
+				{
+					if (bookToEdit.Keys.Count > maxCount)
+					{
+						var prices = bookToEdit.Keys.ToArray();
+						for (int i = bookToEdit.Keys.Count - 1; i >= maxCount; i--)
+						{
+							bookToEdit.Remove(prices[i]);
+						}
+					}
+				}
+			}
 
             static void updateOrderBook(ExchangeOrderBook fullOrderBook, ExchangeOrderBook freshBook)
             {
@@ -73,8 +86,8 @@ namespace ExchangeSharp
                     // update deltas as long as the full book is at or before the delta timestamp
                     if (fullOrderBook.SequenceId <= freshBook.SequenceId)
                     {
-                        applyDelta(freshBook.Asks, fullOrderBook.Asks);
-                        applyDelta(freshBook.Bids, fullOrderBook.Bids);
+                        applyDelta(freshBook.Asks, fullOrderBook.Asks, freshBook.MaxCount);
+                        applyDelta(freshBook.Bids, fullOrderBook.Bids, freshBook.MaxCount);
                         fullOrderBook.SequenceId = freshBook.SequenceId;
                     }
                 }
@@ -148,16 +161,14 @@ namespace ExchangeSharp
 
                     case WebSocketOrderBookType.FullBookFirstThenDeltas:
                     {
-                        // First response from exchange will be the full order book.
-                        // Subsequent updates will be deltas, at least some exchanges have their heads on straight
-                        if (!foundFullBook)
-                        {
-                            fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
-                        }
-                        else
-                        {
-                            updateOrderBook(fullOrderBook, newOrderBook);
-                        }
+						if (!foundFullBook || newOrderBook.IsFull)
+						{
+							fullBooks[newOrderBook.MarketSymbol] = fullOrderBook = newOrderBook;
+						}
+						else
+						{
+							updateOrderBook(fullOrderBook, newOrderBook);
+						}
                     } break;
 
                     case WebSocketOrderBookType.FullBookAlways:

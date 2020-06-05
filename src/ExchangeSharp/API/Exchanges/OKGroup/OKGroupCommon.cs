@@ -274,17 +274,18 @@ namespace ExchangeSharp.OKGroup
 
 			return await ConnectWebSocketOkexAsync(async (_socket) =>
             {
-                marketSymbols = await AddMarketSymbolsToChannel(_socket, "/depth:{0}", marketSymbols);
+                marketSymbols = await AddMarketSymbolsToChannel(_socket, "/depth_l2_tbt:{0}", marketSymbols); // level 2 = 400 levels
             }, (_socket, symbol, sArray, token) =>
             {
-					 ExchangeOrderBook book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token);
+					 ExchangeOrderBook book = ExchangeAPIExtensions.ParseOrderBookFromJTokenArrays(token, maxCount: 400*2); // add/update + remove, so maxCount * 2
                 book.MarketSymbol = symbol;
+				book.MaxCount = 400; // must match subscription count
                 callback(book);
                 return Task.CompletedTask;
             });
         }
 
-        protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
+		protected override async Task<ExchangeOrderBook> OnGetOrderBookAsync(string marketSymbol, int maxCount = 100)
         {
             var token = await MakeRequestOkexAsync(marketSymbol, $"/spot/v3/instruments/{marketSymbol}/book", BaseUrlV3);
 
