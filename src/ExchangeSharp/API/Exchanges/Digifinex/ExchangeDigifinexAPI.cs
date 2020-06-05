@@ -45,7 +45,7 @@ namespace ExchangeSharp
             foreach (var url in Urls)
             {
                 var u = url;
-                client.GetAsync($"https://{u}").ContinueWith((t) =>
+                client.GetAsync($"https://{u}/v3/markets").ContinueWith((t) =>
                 {
                     if (t.Exception != null)
                     {
