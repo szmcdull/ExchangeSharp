@@ -481,7 +481,7 @@ namespace ExchangeSharp
                     var symbol = args[2].ToStringUpperInvariant();
 
                     var x = trades as JArray;
-                    for (int i = 0; i < x.Count; i++)
+                    for (int i = x.Count-1; i >= 0; i--)
                     {
                         var trade = x[i];
                         var isBuy = trade["type"].ToStringLowerInvariant() != "sell";
@@ -493,7 +493,7 @@ namespace ExchangeSharp
                         if (clean)
                         {
                             flags |= ExchangeTradeFlags.IsFromSnapshot;
-                            if (i == x.Count - 1)
+                            if (i == 0)
                             {
                                 flags |= ExchangeTradeFlags.IsLastFromSnapshot;
                             }
